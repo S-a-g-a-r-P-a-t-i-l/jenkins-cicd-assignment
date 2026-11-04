@@ -43,7 +43,7 @@ pipeline {
             }
         }
 
-stage('SSH Credentials Test') {
+stage('SSH Connection Test') {
     steps {
         withCredentials([
             sshUserPrivateKey(
@@ -53,11 +53,17 @@ stage('SSH Credentials Test') {
             )
         ]) {
             sh '''
-                test -s "$SSH_KEY"
-                echo "SSH private key loaded successfully!"
-                echo "SSH username: $EC2_USER"
+                echo "Connecting to EC2..."
+
+                ssh -i "$SSH_KEY" \
+                    -o StrictHostKeyChecking=accept-new \
+                    -o ConnectTimeout=15 \
+                    "$EC2_USER@3.108.215.228" \
+                    "echo 'Jenkins connected to EC2 successfully!' && java -version"
             '''
         }
+    }
+}
     }
 }
 
