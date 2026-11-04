@@ -42,6 +42,25 @@ pipeline {
                                  fingerprint: true
             }
         }
+
+stage('SSH Credentials Test') {
+    steps {
+        withCredentials([
+            sshUserPrivateKey(
+                credentialsId: 'ec2-ssh-key',
+                keyFileVariable: 'SSH_KEY',
+                usernameVariable: 'EC2_USER'
+            )
+        ]) {
+            sh '''
+                test -s "$SSH_KEY"
+                echo "SSH private key loaded successfully!"
+                echo "SSH username: $EC2_USER"
+            '''
+        }
+    }
+}
+
 	
 stage('Deploy to EC2') {
     when {
