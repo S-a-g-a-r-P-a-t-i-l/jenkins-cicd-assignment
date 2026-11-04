@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -27,6 +28,13 @@ pipeline {
             steps {
                 echo 'Creating Application JAR'
                 sh 'mvn package'
+            }
+        }
+
+        stage('Archive Artifacts') {
+            steps {
+                archiveArtifacts artifacts: 'target/*.jar',
+                                 fingerprint: true
             }
         }
     }
