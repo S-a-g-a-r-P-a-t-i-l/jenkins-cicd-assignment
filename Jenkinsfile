@@ -2,6 +2,14 @@
 pipeline {
     agent any
 
+    parameters {
+        booleanParam(
+            name: 'DEPLOY_TO_EC2',
+            defaultValue: false,
+            description: 'Enable this only when EC2 is ready'
+        )
+    }
+
     stages {
 
         stage('Checkout') {
@@ -12,21 +20,18 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo 'Starting Maven Build'
                 sh 'mvn clean compile'
             }
         }
 
         stage('Unit Testing') {
             steps {
-                echo 'Running JUnit Test Cases'
                 sh 'mvn test'
             }
         }
 
         stage('Package') {
             steps {
-                echo 'Creating Application JAR'
                 sh 'mvn package'
             }
         }
@@ -37,19 +42,27 @@ pipeline {
                                  fingerprint: true
             }
         }
+
+        stage('Deploy to EC2') {
+            when {
+                expression { params.DEPLOY_TO_EC2 == true }
+            }
+            steps {
+                echo 'EC2 deployment will execute when configured'
+                sh 'bash deploy/deploy.sh'
+            }
+        }
     }
 
     post {
         always {
             junit 'target/surefire-reports/*.xml'
         }
-
         success {
-            echo 'Build and Testing Successful!'
+            echo 'Pipeline completed successfully!'
         }
-
         failure {
-            echo 'Build Failed!'
+            echo 'Pipeline failed!'
         }
     }
 }
