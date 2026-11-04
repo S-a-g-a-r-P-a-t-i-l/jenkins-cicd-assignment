@@ -42,16 +42,28 @@ pipeline {
                                  fingerprint: true
             }
         }
-
-        stage('Deploy to EC2') {
-            when {
-                expression { params.DEPLOY_TO_EC2 == true }
-            }
-            steps {
-                echo 'EC2 deployment will execute when configured'
-                sh 'bash deploy/deploy.sh'
-            }
+	
+stage('Deploy to EC2') {
+    when {
+        expression { params.DEPLOY_TO_EC2 == true }
+    }
+    steps {
+        withCredentials([
+            sshUserPrivateKey(
+                credentialsId: 'ec2-ssh-key',
+                keyFileVariable: 'SSH_KEY',
+                usernameVariable: 'EC2_USER'
+            )
+        ]) {
+            sh '''
+                chmod +x deploy/deploy.sh
+                export EC2_HOST="YOUR_EC2_PUBLIC_IP"
+                bash deploy/deploy.sh
+            '''
         }
+    }
+}
+
     }
 
     post {
